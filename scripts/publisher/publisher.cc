@@ -26,7 +26,7 @@
 int main(int _argc, char **_argv)
 {
   // Load gazebo
-  gazebo::client::setup(_argc, _argv);
+  gazebo::client::setup(0, NULL);
 
   // Create our node for communication
   gazebo::transport::NodePtr node(new gazebo::transport::Node());
