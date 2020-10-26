@@ -61,8 +61,10 @@ void Simulator::parameters_update(bool force)
 
 		// update parameters from storage
 		updateParams();
+		disabled_motor = _param_m_failure.get();
 	}
 }
+
 
 void Simulator::print_status()
 {

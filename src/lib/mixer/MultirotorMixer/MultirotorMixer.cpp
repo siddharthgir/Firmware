@@ -58,7 +58,7 @@ const MultirotorMixer::Rotor _config_quad_x[] = {
 	{  0.707107,  0.707107, -1.000000,  1.000000 },
 	{ -0.707107, -0.707107, -1.000000,  1.000000 },
 };
-const MultirotorMixer::Rotor *_config_index[] = {
+MultirotorMixer::Rotor *_config_index[] = {
 	&_config_quad_x[0]
 };
 const unsigned _config_rotor_count[] = {4};
@@ -89,7 +89,7 @@ MultirotorMixer::MultirotorMixer(ControlCallback control_cb, uintptr_t cb_handle
 	_idle_speed = -1.0f + idle_speed * 2.0f;	/* shift to output range here to avoid runtime calculation */
 }
 
-MultirotorMixer::MultirotorMixer(ControlCallback control_cb, uintptr_t cb_handle, const Rotor *rotors,
+MultirotorMixer::MultirotorMixer(ControlCallback control_cb, uintptr_t cb_handle, Rotor *rotors,
 				 unsigned rotor_count) :
 	Mixer(control_cb, cb_handle),
 	_rotor_count(rotor_count),
@@ -307,7 +307,7 @@ MultirotorMixer::mix_airmode_disabled(float roll, float pitch, float yaw, float 
 	minimize_saturation(_tmp_array, outputs, _saturation_status);
 
 	// Mix yaw independently
-	mix_yaw(yaw, outputs);
+	if (!updated) mix_yaw(yaw, outputs);
 }
 
 void MultirotorMixer::mix_yaw(float yaw, float *outputs)

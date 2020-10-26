@@ -11,7 +11,7 @@ float32[24] covariances	# Diagonal Elements of Covariance Matrix
 
 float32[3] output_tracking_error # return a vector containing the output predictor angular, velocity and position tracking error magnitudes (rad), (m/s), (m)
 
-uint16 gps_check_fail_flags     # Bitmask to indicate status of GPS checks - see definition below
+uint16 gps_check_fail_flags    # Bitmask to indicate status of GPS checks - see definition below
 # bits are true when corresponding test has failed
 uint8 GPS_CHECK_FAIL_GPS_FIX = 0		# 0 : insufficient fix type (no 3D solution)
 uint8 GPS_CHECK_FAIL_MIN_SAT_COUNT = 1		# 1 : minimum required sat count fail

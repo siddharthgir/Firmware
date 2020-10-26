@@ -123,6 +123,7 @@ public:
 	void set_ip(InternetProtocol ip) { _ip = ip; }
 	void set_port(unsigned port) { _port = port; }
 
+
 #if defined(ENABLE_LOCKSTEP_SCHEDULER)
 	bool has_initialized() { return _has_initialized.load(); }
 #endif
@@ -228,6 +229,9 @@ private:
 	int _actuator_outputs_sub{-1};
 	actuator_outputs_s _actuator_outputs{};
 
+	int disabled_motor;
+
+
 	uORB::Subscription _vehicle_status_sub{ORB_ID(vehicle_status)};
 
 	// hil map_ref data
@@ -256,6 +260,7 @@ private:
 		(ParamBool<px4::params::SIM_DPRES_BLOCK>) _param_sim_dpres_block,
 		(ParamInt<px4::params::MAV_TYPE>) _param_mav_type,
 		(ParamInt<px4::params::MAV_SYS_ID>) _param_mav_sys_id,
-		(ParamInt<px4::params::MAV_COMP_ID>) _param_mav_comp_id
+		(ParamInt<px4::params::MAV_COMP_ID>) _param_mav_comp_id,
+		(ParamInt<px4::params::M_FAILURE>) _param_m_failure
 	)
 };

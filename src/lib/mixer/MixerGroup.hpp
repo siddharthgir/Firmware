@@ -73,6 +73,9 @@ public:
 	 */
 	void				reset() { _mixers.clear(); }
 
+	void 				updateFailure(int m_failure);
+
+
 	/**
 	 * Count the mixers in the group.
 	 */

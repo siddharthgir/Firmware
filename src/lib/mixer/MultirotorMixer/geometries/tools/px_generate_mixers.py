@@ -189,16 +189,38 @@ def geometry_to_mix(geometry):
     Am = geometry_to_torque_matrix(geometry)
     A = np.vstack([Am, At])
 
+
+    for i in range(len(A)):
+        A[i][0] = 0
+    print(A)
+
+    for i in range(len(A[0])):
+        A[2][i] = 0
+
     # Mix matrix computed as pseudoinverse of A
     B = np.linalg.pinv(A)
-
+    print("Inverse")
+    print(B)
+    B = B[1:]
     return A, B
 
 def normalize_mix_px4(B):
-    '''
-    Normalize mix for PX4
+
+    """Normalize mix for PX4
     This is for compatibility only and should ideally not be used
-    '''
+    """
+
+    fail2 = [1,0,0,1,1,1]
+    """
+    print(B)
+    for i in range(len(B)):
+        for j in range(len(B[i])):
+            B[i][j] *= fail2[i]
+    print("After modification")
+    print(B)
+    """
+    #B = B[1:]
+
     B_norm = np.linalg.norm(B, axis=0)
     B_max = np.abs(B).max(axis=0)
     B_sum = np.sum(B, axis=0)
@@ -219,6 +241,8 @@ def normalize_mix_px4(B):
 
     # Normalize
     B_norm[np.abs(B_norm) < 1e-3] = 1
+    print("matrix")
+
     B_px = (B / B_norm)
 
     return B_px
@@ -258,7 +282,7 @@ def generate_mixer_multirotor_header(geometries_list, use_normalized_mix=False, 
         else:
             mix = geometry['mix']['B']
 
-        buf.write(u"static constexpr MultirotorMixer::Rotor _config_{}[] {{\n".format(geometry['info']['name']))
+        buf.write(u"MultirotorMixer::Rotor _config_{}[] {{\n".format(geometry['info']['name']))
 
         for row in mix:
             if use_6dof:
@@ -275,13 +299,13 @@ def generate_mixer_multirotor_header(geometries_list, use_normalized_mix=False, 
         buf.write(u"};\n\n")
 
     # Print geometry indeces
-    buf.write(u"static constexpr const MultirotorMixer::Rotor *_config_index[] {\n")
+    buf.write(u"MultirotorMixer::Rotor *_config_index[] {\n")
     for geometry in geometries_list:
         buf.write(u"\t&_config_{}[0],\n".format(geometry['info']['name']))
     buf.write(u"};\n\n")
 
     # Print geometry rotor counts
-    buf.write(u"static constexpr unsigned _config_rotor_count[] {\n")
+    buf.write(u"unsigned _config_rotor_count[] {\n")
     for geometry in geometries_list:
         buf.write(u"\t{}, /* {} */\n".format(len(geometry['rotors']), geometry['info']['name']))
     buf.write(u"};\n\n")
@@ -336,6 +360,7 @@ if __name__ == '__main__':
 
     for filename in filenames:
         # Parse geometry file
+        if "quad_wide.toml" not in filename: continue
         geometry = parse_geometry_toml(filename)
 
         # Compute torque and thrust matrices
@@ -392,6 +417,7 @@ if __name__ == '__main__':
     if args.outputfile is not None:
         # Write header file
         with open(args.outputfile, 'w') as fd:
+            print(header)
             fd.write(header)
     else:
         # Print to standard output

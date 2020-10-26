@@ -66,6 +66,17 @@ MixerGroup::mix(float *outputs, unsigned space)
 	return index;
 }
 
+void
+MixerGroup::updateFailure(int m_failure)
+{
+	if (m_failure != 0){
+		for (auto mixer : _mixers) {
+			mixer->motor_failure_1();
+		}
+	}
+}
+
+
 /*
  * set_trims() has no effect except for the SimpleMixer implementation for which set_trim()
  * always returns the value one.
@@ -76,7 +87,6 @@ unsigned
 MixerGroup::set_trims(int16_t *values, unsigned n)
 {
 	unsigned index = 0;
-
 	for (auto mixer : _mixers) {
 		// convert from integer to float
 		// to be safe, clamp offset to range of [-500, 500] usec

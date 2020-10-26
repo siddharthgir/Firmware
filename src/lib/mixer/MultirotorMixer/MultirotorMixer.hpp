@@ -63,6 +63,9 @@ public:
 		float	thrust_scale;	/**< scales thrust for this rotor */
 	};
 
+	float motor_1_failure_gains[6] = {0,0.599,1.7998,1.49998,0.89999,1.1999};
+
+	bool updated = false;
 	/**
 	 * Constructor.
 	 *
@@ -90,7 +93,7 @@ public:
 	 * @param rotors		control allocation matrix
 	 * @param rotor_count		length of rotors array (= number of motors)
 	 */
-	MultirotorMixer(ControlCallback control_cb, uintptr_t cb_handle, const Rotor *rotors, unsigned rotor_count);
+	MultirotorMixer(ControlCallback control_cb, uintptr_t cb_handle,Rotor *rotors, unsigned rotor_count);
 	virtual ~MultirotorMixer();
 
 	// no copy, assignment, move, move assignment
@@ -138,6 +141,45 @@ public:
 
 	unsigned		set_trim(float trim) override { return _rotor_count; }
 	unsigned		get_trim(float *trim) override { return _rotor_count; }
+
+	void 	    motor_failure_1() override {
+			return;
+			if (updated) return;
+			printf("updating rotor status\n");
+
+			/*float values[6][4] = {
+					{ -0.000000,  0.000000, -0.000000,  0.000000 },
+					{  0.319471, -0.000000,  0.099835,  0.332815 },
+					{  0.239977,  0.969854,  0.599941,  1.000000 },
+					{ -1.000000, -0.808291,  1.000000,  0.833415 },
+					{ -0.120000,  0.484976, -0.300001,  0.500050 },
+					{  0.799944, -0.646587, -0.799944,  0.666685 },
+				};
+								{ -0.659749,  0.000000, -0.250000,  0.666587 },
+				{  0.000000, -0.000000,  0.000000,  0.000000 },
+				{  0.000000,  0.000000,  0.000000,  0.000000 },
+				{ -0.412393, -0.333333,  0.500060,  0.333333 },
+				{ -0.247436,  1.000000, -0.750090,  1.000000 },
+				{  0.824687, -0.666587, -1.000000,  0.666587 },
+				""""""
+
+			*/
+			float values2[6][6]{
+				{  0.000000,  0.000000,  0.000000,  0.000000 },
+				{  0.866025, -0.866025,  0.000000, -0.000000 },
+				{  0.000000,  0.866025, -0.000000,  1.500000 },
+				{ -0.866025, -0.000000, -0.000000,  1.500000 }
+			};
+			updated = true;
+			for (unsigned i = 0; i < _rotor_count; i++) {
+				_rotors[i].roll_scale = values2[i][0];
+				_rotors[i].pitch_scale = values2[i][1];
+				_rotors[i].yaw_scale = values2[i][2];
+				_rotors[i].thrust_scale = values2[i][3];
+			}
+			return;
+	}
+
 
 	/**
 	 * @brief      Sets the thrust factor used to calculate mapping from desired thrust to motor control signal output.
@@ -217,6 +259,7 @@ private:
 	 */
 	inline void mix_airmode_rpy(float roll, float pitch, float yaw, float thrust, float *outputs);
 
+
 	/**
 	 * Mix roll, pitch, yaw, thrust and set the outputs vector.
 	 *
@@ -253,7 +296,7 @@ private:
 	saturation_status		_saturation_status{};
 
 	unsigned			_rotor_count;
-	const Rotor			*_rotors;
+	Rotor			*_rotors;
 
 	float 				*_outputs_prev{nullptr};
 	float 				*_tmp_array{nullptr};

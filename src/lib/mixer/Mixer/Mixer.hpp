@@ -142,6 +142,8 @@ public:
 		roll_pitch_yaw = 2
 	};
 
+	void motor_failure();
+
 	/**
 	 * Fetch a control value.
 	 *
@@ -175,6 +177,9 @@ public:
 	 * @return			The number of entries in the output array that were populated.
 	 */
 	virtual unsigned		mix(float *outputs, unsigned space) = 0;
+
+	virtual void 	    motor_failure_1(){return;};
+
 
 	/**
 	 * Get the saturation status.
