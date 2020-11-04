@@ -33,6 +33,10 @@
 
 #include "MulticopterRateControl.hpp"
 
+
+// #include <uORB/topics/vehicle_status.h> // new topic for checking motor failure
+
+
 #include <drivers/drv_hrt.h>
 #include <circuit_breaker/circuit_breaker.h>
 #include <mathlib/math/Limits.hpp>
@@ -144,7 +148,44 @@ MulticopterRateControl::Run()
 	/* run controller on gyro changes */
 	vehicle_angular_velocity_s angular_velocity;
 
-	if (_vehicle_angular_velocity_sub.update(&angular_velocity)) {
+	// check for motor failure
+        if (_mc_failure != 0){
+                // fetching current  angular velocity
+		if (_vehicle_angular_velocity_sub.update(&angular_velocity)) {
+                        const Vector3f rates{angular_velocity.xyz};
+			float p=rates[0];
+			float q=rates[1];
+		}
+                // fetching current angular velocity setpoints(published in mc_att_control)
+		vehicle_mf_angular_velocity_s angular_mf_velocity;// this is when motor fails
+                if (_vehicle_mf_angular_velocity_sub.update(&angular_mf_velocity)){
+                        float p_des= angular_mf_velocity.p;
+			float q_des= angular_mf_velocity.q;
+	         }
+                // fetching current angular acceleration
+               vehicle_angular_acceleration_s v_angular_acceleration{};
+	       if( _vehicle_angular_acceleration_sub.update(&v_angular_acceleration)){
+                        const Vector3f angular_accel{v_angular_acceleration.xyz};
+			float p_dot=angular_accel[0];
+			float q_dot=angular_accel[1];
+	        }
+
+                float Ixx=0.0296;
+		float Iyy=0.0638;
+                float Kp1=1.2;
+		float Kp2=1.2;
+
+		float Vp=Kp1*(p_des-p);
+		float Vq=Kp2*(q_des-q);
+
+	        torque_mf tau{};
+	        tau.Tx =Ixx*(Vp-p_dot);
+		tau.Ty =Iyy*(Vq-q_dot);
+
+		tau.timestamp = hrt_absolute_time();
+		_torque_mf_pub.publish(tau);
+	}
+        else if (_vehicle_angular_velocity_sub.update(&angular_velocity)) {
 
 		// grab corresponding vehicle_angular_acceleration immediately after vehicle_angular_velocity copy
 		vehicle_angular_acceleration_s v_angular_acceleration{};
@@ -207,7 +248,7 @@ MulticopterRateControl::Run()
 			_landing_gear_sub.update(&_landing_gear);
 		}
 
-		if (manual_rate_sp) {
+		if (manual_rate_sp ) {
 			if (manual_control_updated) {
 
 				// manual rates control - ACRO mode
@@ -265,7 +306,7 @@ MulticopterRateControl::Run()
 			}
 
 			// run rate controller
-			const Vector3f att_control = _rate_control.update(rates, _rates_sp, angular_accel, dt, _maybe_landed || _landed);
+			const Vector3f att_control = _rate_control.update(rates, _rates_sp, angular_accel, dt, _maybe_landed || _landed,);
 
 			// publish rate controller status
 			rate_ctrl_status_s rate_ctrl_status{};

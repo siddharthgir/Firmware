@@ -298,6 +298,7 @@ MulticopterAttitudeControl::Run()
 		data.p = p_des
 		data.q = q_des
 		data.t = T
+
 		data.timestamp = hrt_absolute_time();
 		_vehicle_mf_angular_velocity_pub.publish(data);
 	}

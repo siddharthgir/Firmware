@@ -126,7 +126,7 @@ private:
 
 	struct vehicle_attitude_s		_v_att {};		/**< vehicle attitude */
 	struct estimator_status                 _status {};
-	sturct vehicle_local_position currentPosition;
+	struct vehicle_local_position currentPosition;
 	struct vehicle_angular_velocity         _angular_velocity {};
 	struct vehicle_rates_setpoint_s		_v_rates_sp {};		/**< vehicle rates setpoint */
 	struct manual_control_setpoint_s	_manual_control_setpoint {};	/**< manual control setpoint */
