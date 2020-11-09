@@ -146,28 +146,28 @@ MulticopterRateControl::Run()
 	}
 
 	/* run controller on gyro changes */
-	vehicle_angular_velocity_s angular_velocity;
 
 	// check for motor failure
-        if (_mc_failure != 0){
+        if (_m_failure.get() != 0){
                 // fetching current  angular velocity
+
+		vehicle_angular_velocity_s angular_velocity;
 		if (_vehicle_angular_velocity_sub.update(&angular_velocity)) {
-                        const Vector3f rates{angular_velocity.xyz};
-			float p=rates[0];
-			float q=rates[1];
-		}
+
+		float p=angular_velocity.xyz[0];
+		float q=angular_velocity.xyz[1];
+
                 // fetching current angular velocity setpoints(published in mc_att_control)
 		vehicle_mf_angular_velocity_s angular_mf_velocity;// this is when motor fails
                 if (_vehicle_mf_angular_velocity_sub.update(&angular_mf_velocity)){
-                        float p_des= angular_mf_velocity.p;
-			float q_des= angular_mf_velocity.q;
+                        p_des= angular_mf_velocity.p;
+			q_des= angular_mf_velocity.q;
 	         }
                 // fetching current angular acceleration
                vehicle_angular_acceleration_s v_angular_acceleration{};
 	       if( _vehicle_angular_acceleration_sub.update(&v_angular_acceleration)){
-                        const Vector3f angular_accel{v_angular_acceleration.xyz};
-			float p_dot=angular_accel[0];
-			float q_dot=angular_accel[1];
+			p_dot=v_angular_acceleration.xyz[0];
+			q_dot=v_angular_acceleration.xyz[1];
 	        }
 
                 float Ixx=0.0296;
@@ -178,15 +178,19 @@ MulticopterRateControl::Run()
 		float Vp=Kp1*(p_des-p);
 		float Vq=Kp2*(q_des-q);
 
-	        torque_mf tau{};
-	        tau.Tx =Ixx*(Vp-p_dot);
-		tau.Ty =Iyy*(Vq-q_dot);
-
-		tau.timestamp = hrt_absolute_time();
-		_torque_mf_pub.publish(tau);
+		actuator_controls_s actuators{};
+		actuators.control[actuator_controls_s::INDEX_ROLL] = (Ixx*(Vp-p_dot))/1000;
+		actuators.control[actuator_controls_s::INDEX_PITCH] = (Iyy*(Vq-q_dot))/1000;
+		actuators.control[actuator_controls_s::INDEX_THROTTLE] = (angular_mf_velocity.t)/1000;
+		printf("values sent: %f %f %f\n",(double)actuators.control[actuator_controls_s::INDEX_ROLL],(double)actuators.control[actuator_controls_s::INDEX_PITCH],(double)actuators.control[actuator_controls_s::INDEX_THROTTLE]);
+		actuators.timestamp_sample = angular_velocity.timestamp_sample;
+		actuators.timestamp = hrt_absolute_time();
+		_actuators_0_pub.publish(actuators);
+		}
 	}
-        else if (_vehicle_angular_velocity_sub.update(&angular_velocity)) {
-
+        else{
+	vehicle_angular_velocity_s angular_velocity;
+	if (_vehicle_angular_velocity_sub.update(&angular_velocity)) {
 		// grab corresponding vehicle_angular_acceleration immediately after vehicle_angular_velocity copy
 		vehicle_angular_acceleration_s v_angular_acceleration{};
 		_vehicle_angular_acceleration_sub.copy(&v_angular_acceleration);
@@ -306,7 +310,7 @@ MulticopterRateControl::Run()
 			}
 
 			// run rate controller
-			const Vector3f att_control = _rate_control.update(rates, _rates_sp, angular_accel, dt, _maybe_landed || _landed,);
+			const Vector3f att_control = _rate_control.update(rates, _rates_sp, angular_accel, dt, _maybe_landed || _landed);
 
 			// publish rate controller status
 			rate_ctrl_status_s rate_ctrl_status{};
@@ -350,6 +354,7 @@ MulticopterRateControl::Run()
 				actuators.timestamp = hrt_absolute_time();
 				_actuators_0_pub.publish(actuators);
 			}
+		}
 		}
 	}
 

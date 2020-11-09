@@ -44,7 +44,6 @@
  */
 
 #include "mc_att_control.hpp"
-
 #include <drivers/drv_hrt.h>
 #include <mathlib/math/Limits.hpp>
 #include <mathlib/math/Functions.hpp>
@@ -274,33 +273,38 @@ MulticopterAttitudeControl::Run()
 	// run controller on attitude updates
 	const uint8_t prev_quat_reset_counter = _v_att.quat_reset_counter;
 
-	if (_mc_failure != 0){
+	if (_m_failure.get() != 0){
 		if(_vehicle_local_position_setpoint_sub.updated()){
-			_vehicle_local_position_setpoint_sub(&currentPosition);
-			matrix::Vector3f _acceleration_des(currentPosition.acceleration);
-			a_des_g = _acceleration_des - _gravity;
-		}
-		if(_vehicle_angular_velocity.updated()){
-			_vehicle_angular_velocity.update(&_angular_velocity);
-		}
-		if(_estimator_status.update(&_status)){
-			matrix::Quatf quat_rot = matrix::quatf{_status.states[0],_status.states[1],_status.states[2],_status.states[3]};
-			matrix::Vector3f n_des = a_des_g.normalized();
-			matrix::Vector3f n_des_b = quat_rot.conjugate(n_des);
-			matrix::Vector2f v_out = matrix::Vector2f(x_gain*(n_b[0]-n_des_b[0]),y_gain*(n_b[1]-n_des_b[1]));
-			matrix::Vector2f h = matrix::Vector2f(n_des_b[1],-n_des_b[0])*_angular_velocity.xyz[2];
-			matrix::Vector2f RHS = v_out - h
-			float p_des = (1/n_des_b[2])*(RHS[1]);
-			float q_des = (-1/n_des_b[2])*(RHS[0]);
-			float T = -1.585*((quat_rot.conjugate(a_des_g))*(n_des))
-		}
-		vehicle_mf_angular_velocity data{};
-		data.p = p_des
-		data.q = q_des
-		data.t = T
+			_vehicle_local_position_setpoint_sub.update(&currentPosition);
 
-		data.timestamp = hrt_absolute_time();
-		_vehicle_mf_angular_velocity_pub.publish(data);
+		}
+
+		if(_vehicle_angular_velocity_sub.updated()){
+			_vehicle_angular_velocity_sub.update(&_angular_velocity);
+		}
+
+		if(_estimator_status.update(&_status)){
+			matrix::Vector3f _acceleration_des(currentPosition.acceleration);
+			matrix::Vector3f a_des_g = _acceleration_des - _gravity;
+			matrix::Quatf quat_rot = matrix::Quatf{_status.states[0],_status.states[1],_status.states[2],_status.states[3]};
+			n_des = a_des_g.normalized();
+			matrix::Vector3f n_des_b = quat_rot.conjugate(n_des);
+			matrix::Vector2f v_out(x_gain*(n_b(0)-n_des_b(0)),y_gain*(n_b(1)-n_des_b(1)));
+			matrix::Vector2f h = matrix::Vector2f(n_des_b(1),-n_des_b(0))*_angular_velocity.xyz[2];
+			matrix::Vector2f RHS = v_out - h;
+			float p_des = (1/n_des_b(2))*(RHS(1));
+			float q_des = (-1/n_des_b(2))*(RHS(0));
+			float T = -1.585f*((quat_rot.conjugate(a_des_g))*(n_des));
+			vehicle_mf_angular_velocity_s data{};
+			data.p = p_des;
+			data.q = q_des;
+			data.t = T;
+
+			data.timestamp = hrt_absolute_time();
+			_vehicle_mf_angular_velocity_pub.publish(data);
+		}
+
+
 	}
 
 	else if (_vehicle_attitude_sub.update(&_v_att)) {

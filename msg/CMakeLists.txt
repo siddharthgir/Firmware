@@ -144,6 +144,7 @@ set(msg_files
 	vehicle_angular_acceleration.msg
 	vehicle_angular_acceleration_setpoint.msg
 	vehicle_angular_velocity.msg
+	vehicle_mf_angular_velocity.msg
 	vehicle_attitude.msg
 	vehicle_attitude_setpoint.msg
 	vehicle_command.msg

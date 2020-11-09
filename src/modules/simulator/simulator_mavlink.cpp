@@ -180,7 +180,6 @@ void Simulator::send_controls()
 	orb_copy(ORB_ID(actuator_outputs), _actuator_outputs_sub, &_actuator_outputs);
 	if (_actuator_outputs.timestamp > 0) {
 		mavlink_hil_actuator_controls_t hil_act_control = actuator_controls_from_outputs();
-		//for (int i = 0; i < 16; i++) hil_act_control.controls[i] = 0;
 		if (disabled_motor != 0) {
 			hil_act_control.controls[disabled_motor-1] = -2;
 		}

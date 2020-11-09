@@ -60,7 +60,6 @@
 #include <uORB/topics/vehicle_rates_setpoint.h>
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/vehicle_mf_angular_velocity.h>// for subscribing p_des and q_des
-#include <uORB/topics/torque_mf.h>// torque control when motor fails
 class MulticopterRateControl : public ModuleBase<MulticopterRateControl>, public ModuleParams, public px4::WorkItem
 {
 public:
@@ -114,12 +113,17 @@ private:
 	uORB::Publication<landing_gear_s>		_landing_gear_pub{ORB_ID(landing_gear)};
 	uORB::Publication<vehicle_rates_setpoint_s>	_v_rates_sp_pub{ORB_ID(vehicle_rates_setpoint)};			/**< rate setpoint publication */
         // for publishing torque when motor gets failed
-        uORB::Publication<torque_mf_s> _torque_mf_pub;
 
 	landing_gear_s 			_landing_gear{};
 	manual_control_setpoint_s	_manual_control_setpoint{};
 	vehicle_control_mode_s		_v_control_mode{};
 	vehicle_status_s		_vehicle_status{};
+
+	float p_des{};
+	float q_des{};
+
+	float p_dot{};
+	float q_dot{};
 
 
 	bool _actuators_0_circuit_breaker_enabled{false};	/**< circuit breaker to suppress output */
@@ -169,12 +173,13 @@ private:
 		(ParamFloat<px4::params::MC_ACRO_EXPO_Y>) _param_mc_acro_expo_y,				/**< expo stick curve shape (yaw) */
 		(ParamFloat<px4::params::MC_ACRO_SUPEXPO>) _param_mc_acro_supexpo,			/**< superexpo stick curve shape (roll & pitch) */
 		(ParamFloat<px4::params::MC_ACRO_SUPEXPOY>) _param_mc_acro_supexpoy,			/**< superexpo stick curve shape (yaw) */
-                (ParamFloat<px4::params::MC_FAILURE>) _mc_failure,    // to check if motor has failed or not
+                (ParamInt<px4::params::M_FAILURE>) _m_failure,    // to check if motor has failed or not
 		(ParamFloat<px4::params::MC_RATT_TH>) _param_mc_ratt_th,
 
 		(ParamBool<px4::params::MC_BAT_SCALE_EN>) _param_mc_bat_scale_en,
 
 		(ParamInt<px4::params::CBRK_RATE_CTRL>) _param_cbrk_rate_ctrl
+
 	)
 
 	matrix::Vector3f _acro_rate_max;	/**< max attitude rates in acro mode */

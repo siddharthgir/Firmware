@@ -143,10 +143,10 @@ public:
 	unsigned		get_trim(float *trim) override { return _rotor_count; }
 
 	void 	    motor_failure_1() override {
-			return;
 			if (updated) return;
+			updated = true;
 			printf("updating rotor status\n");
-
+			return;
 			/*float values[6][4] = {
 					{ -0.000000,  0.000000, -0.000000,  0.000000 },
 					{  0.319471, -0.000000,  0.099835,  0.332815 },
@@ -163,14 +163,14 @@ public:
 				{  0.824687, -0.666587, -1.000000,  0.666587 },
 				""""""
 
-			*/
+
 			float values2[6][6]{
 				{  0.000000,  0.000000,  0.000000,  0.000000 },
 				{  0.866025, -0.866025,  0.000000, -0.000000 },
 				{  0.000000,  0.866025, -0.000000,  1.500000 },
 				{ -0.866025, -0.000000, -0.000000,  1.500000 }
 			};
-			updated = true;
+
 			for (unsigned i = 0; i < _rotor_count; i++) {
 				_rotors[i].roll_scale = values2[i][0];
 				_rotors[i].pitch_scale = values2[i][1];
@@ -178,6 +178,7 @@ public:
 				_rotors[i].thrust_scale = values2[i][3];
 			}
 			return;
+			*/
 	}
 
 

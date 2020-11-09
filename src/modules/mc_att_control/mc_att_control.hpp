@@ -48,6 +48,8 @@
 #include <uORB/topics/manual_control_setpoint.h>
 #include <uORB/topics/parameter_update.h>
 #include <uORB/topics/vehicle_attitude.h>
+#include <uORB/topics/vehicle_local_position.h>
+#include <uORB/topics/vehicle_local_position_setpoint.h>
 #include <uORB/topics/vehicle_attitude_setpoint.h>
 #include <uORB/topics/vehicle_control_mode.h>
 #include <uORB/topics/estimator_status.h>
@@ -110,24 +112,24 @@ private:
 
 	uORB::Subscription _vehicle_attitude_setpoint_sub{ORB_ID(vehicle_attitude_setpoint)};
 	uORB::Subscription _vehicle_local_position_setpoint_sub{ORB_ID(vehicle_local_position_setpoint)};
-	uORB::Subscription _velocity_angular_velocity_sub{ORB_ID(vehicle_angular_velocity)};
+	uORB::Subscription _vehicle_angular_velocity_sub{ORB_ID(vehicle_angular_velocity)};
 	uORB::Subscription _v_rates_sp_sub{ORB_ID(vehicle_rates_setpoint)};		/**< vehicle rates setpoint subscription */
 	uORB::Subscription _v_control_mode_sub{ORB_ID(vehicle_control_mode)};		/**< vehicle control mode subscription */
 	uORB::Subscription _params_sub{ORB_ID(parameter_update)};			/**< parameter updates subscription */
 	uORB::Subscription _manual_control_setpoint_sub{ORB_ID(manual_control_setpoint)};	/**< manual control setpoint subscription */
 	uORB::Subscription _vehicle_status_sub{ORB_ID(vehicle_status)};			/**< vehicle status subscription */
 	uORB::Subscription _vehicle_land_detected_sub{ORB_ID(vehicle_land_detected)};	/**< vehicle land detected subscription */
-	uORB::Subscription _estimator_status{ORB_ID(_estimator_status)};
+	uORB::Subscription _estimator_status{ORB_ID(estimator_status)};
 	uORB::SubscriptionCallbackWorkItem _vehicle_attitude_sub{this, ORB_ID(vehicle_attitude)};
 
 	uORB::Publication<vehicle_rates_setpoint_s>	_v_rates_sp_pub{ORB_ID(vehicle_rates_setpoint)};			/**< rate setpoint publication */
 	uORB::Publication<vehicle_attitude_setpoint_s>	_vehicle_attitude_setpoint_pub;
-	uORB::Publication<vehicle_mf_angular_velocity_s> _vehicle_mf_angular_velocity_pub;
+	uORB::Publication<vehicle_mf_angular_velocity_s> _vehicle_mf_angular_velocity_pub{ORB_ID(vehicle_mf_angular_velocity)};
 
 	struct vehicle_attitude_s		_v_att {};		/**< vehicle attitude */
-	struct estimator_status                 _status {};
-	struct vehicle_local_position currentPosition;
-	struct vehicle_angular_velocity         _angular_velocity {};
+	struct estimator_status_s                 _status {};
+	struct vehicle_local_position_setpoint_s currentPosition {};
+	struct vehicle_angular_velocity_s         _angular_velocity {};
 	struct vehicle_rates_setpoint_s		_v_rates_sp {};		/**< vehicle rates setpoint */
 	struct manual_control_setpoint_s	_manual_control_setpoint {};	/**< manual control setpoint */
 	struct vehicle_control_mode_s		_v_control_mode {};	/**< vehicle control mode */
@@ -140,7 +142,9 @@ private:
 
 	matrix::Vector3f _gravity{0,0,9.81};
 
+
 	matrix::Vector3f n_des;
+	matrix::Vector3f n_b{0,0,-1};
 	matrix::Vector3f _rates_sp; ///< angular rates setpoint
 
 	float x_gain = 1;
@@ -178,8 +182,8 @@ private:
 		(ParamInt<px4::params::MPC_THR_CURVE>) _param_mpc_thr_curve,				/**< throttle curve behavior */
 
 		(ParamInt<px4::params::MC_AIRMODE>) _param_mc_airmode,
-		(ParamFloat<px4::params::MC_MAN_TILT_TAU>) _param_mc_man_tilt_tau
-		(ParamFloat<px4::params::MC_FAILURE>) _mc_failure
+		(ParamFloat<px4::params::MC_MAN_TILT_TAU>) _param_mc_man_tilt_tau,
+		(ParamInt<px4::params::M_FAILURE>) _m_failure
 
 	)
 
