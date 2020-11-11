@@ -150,7 +150,7 @@ MulticopterRateControl::Run()
 	// check for motor failure
         if (_m_failure.get() != 0){
                 // fetching current  angular velocity
-
+		printf("\n \n Entering Rate Controller \n \n");
 		vehicle_angular_velocity_s angular_velocity;
 		if (_vehicle_angular_velocity_sub.update(&angular_velocity)) {
 
@@ -169,20 +169,29 @@ MulticopterRateControl::Run()
 			p_dot=v_angular_acceleration.xyz[0];
 			q_dot=v_angular_acceleration.xyz[1];
 	        }
-
+		printf("Inputs p: %f, q: %f, p_des: %f, q_des: %f, p_dot:%f, q_dot:%f \n",(double)p,(double)q,(double)p_des,(double)q_des,(double)p_dot,(double)q_dot);
                 float Ixx=0.0296;
-		float Iyy=0.0638;
-                float Kp1=1.2;
-		float Kp2=1.2;
+		float Iyy=0.0296;
+                float Kp1=0.012;
+		float Kp2=0.012;
 
 		float Vp=Kp1*(p_des-p);
 		float Vq=Kp2*(q_des-q);
 
+		//Store old values and add new values
+
+		roll = roll + (Ixx*(Vp-p_dot));
+		pitch = pitch + (Iyy*(Vq-q_dot));
+
+		if (angular_mf_velocity.t > 0.0001f){
+			t = angular_mf_velocity.t;
+		}
+
+		printf("Torque Values: roll: %f pitch: %f Throttle: %f\n",(double)roll,(double)pitch,(double)t);
 		actuator_controls_s actuators{};
-		actuators.control[actuator_controls_s::INDEX_ROLL] = (Ixx*(Vp-p_dot))/1000;
-		actuators.control[actuator_controls_s::INDEX_PITCH] = (Iyy*(Vq-q_dot))/1000;
-		actuators.control[actuator_controls_s::INDEX_THROTTLE] = (angular_mf_velocity.t)/1000;
-		printf("values sent: %f %f %f\n",(double)actuators.control[actuator_controls_s::INDEX_ROLL],(double)actuators.control[actuator_controls_s::INDEX_PITCH],(double)actuators.control[actuator_controls_s::INDEX_THROTTLE]);
+		actuators.control[actuator_controls_s::INDEX_ROLL] = roll/1000;
+		actuators.control[actuator_controls_s::INDEX_PITCH] = pitch/1000;
+		actuators.control[actuator_controls_s::INDEX_THROTTLE] = (t)/1000;
 		actuators.timestamp_sample = angular_velocity.timestamp_sample;
 		actuators.timestamp = hrt_absolute_time();
 		_actuators_0_pub.publish(actuators);

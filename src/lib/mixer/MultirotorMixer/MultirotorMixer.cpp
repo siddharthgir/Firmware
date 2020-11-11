@@ -340,21 +340,22 @@ MultirotorMixer::mix(float *outputs, unsigned space)
 	}
 
 	if(updated){
+		printf("\n \n Entering Mixer \n \n");
 		float roll    = get_control(0, 0)*1000;
 		float pitch   = get_control(0, 1)*1000;
 		float yaw     = get_control(0, 2)*1000;
 		float thrust  = get_control(0, 3)*1000;
 
-		printf("values received: %f %f %f %f\n",(double)roll,(double)pitch,(double)yaw,(double)thrust);
+		printf("Input received: roll:%f pitch:%f yaw:%f thrust:%f \n",(double)roll,(double)pitch,(double)yaw,(double)thrust);
 		outputs[0] = 0.0f;
-		outputs[1] = roll/(13225);
-		outputs[2] = ((thrust/2) - (roll/2) + (pitch/2))/(13225);
-		outputs[3] = ((thrust/2) - (roll/2) - (pitch/2))/(13225);
-		printf("Motors values: %f %f %f %f",(double)outputs[0],(double)outputs[1],(double)outputs[2],(double)outputs[3]);
+		outputs[1] = roll;
+		outputs[2] = ((thrust/2) - (roll/2) + (pitch/2));
+		outputs[3] = ((thrust/2) - (roll/2) - (pitch/2));
+		printf("Motors values output: %f %f %f %f \n",(double)outputs[0],(double)outputs[1],(double)outputs[2],(double)outputs[3]);
 		for (unsigned i = 0; i < _rotor_count; i++) {
 		// Implement simple model for static relationship between applied motor pwm and motor thrust
 		// model: thrust = (1 - _thrust_factor) * PWM + _thrust_factor * PWM^2
-		outputs[i] = math::constrain(_idle_speed + (outputs[i] * (1.0f - _idle_speed)), _idle_speed, 1.0f);
+		outputs[i] = math::constrain(_idle_speed + ((outputs[i]/(10)) * (1.0f - _idle_speed)), _idle_speed, 1.0f);
 		}
 
 		return _rotor_count;

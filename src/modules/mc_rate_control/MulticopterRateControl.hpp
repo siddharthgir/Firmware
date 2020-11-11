@@ -125,6 +125,9 @@ private:
 	float p_dot{};
 	float q_dot{};
 
+	float roll{};
+	float pitch{};
+	float t{};
 
 	bool _actuators_0_circuit_breaker_enabled{false};	/**< circuit breaker to suppress output */
 	bool _landed{true};

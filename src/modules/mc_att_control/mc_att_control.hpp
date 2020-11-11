@@ -147,8 +147,8 @@ private:
 	matrix::Vector3f n_b{0,0,-1};
 	matrix::Vector3f _rates_sp; ///< angular rates setpoint
 
-	float x_gain = 1;
-	float y_gain = 1;
+	float x_gain = 0.01;
+	float y_gain = 0.01;
 
 	float _man_yaw_sp{0.f};				/**< current yaw setpoint in manual mode */
 	float _man_tilt_max;			/**< maximum tilt allowed for manual flight [rad] */
