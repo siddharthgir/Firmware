@@ -130,6 +130,7 @@ private:
 	struct estimator_status_s                 _status {};
 	struct vehicle_local_position_setpoint_s currentPosition {};
 	struct vehicle_angular_velocity_s         _angular_velocity {};
+	matrix::Quatf quat_rot{};
 	struct vehicle_rates_setpoint_s		_v_rates_sp {};		/**< vehicle rates setpoint */
 	struct manual_control_setpoint_s	_manual_control_setpoint {};	/**< manual control setpoint */
 	struct vehicle_control_mode_s		_v_control_mode {};	/**< vehicle control mode */
@@ -147,8 +148,8 @@ private:
 	matrix::Vector3f n_b{0,0,-1};
 	matrix::Vector3f _rates_sp; ///< angular rates setpoint
 
-	float x_gain = 0.01;
-	float y_gain = 0.01;
+	float x_gain = 6.5;
+	float y_gain = 6.5;
 
 	float _man_yaw_sp{0.f};				/**< current yaw setpoint in manual mode */
 	float _man_tilt_max;			/**< maximum tilt allowed for manual flight [rad] */

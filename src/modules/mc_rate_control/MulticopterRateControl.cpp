@@ -170,13 +170,26 @@ MulticopterRateControl::Run()
 			q_dot=v_angular_acceleration.xyz[1];
 	        }
 		printf("Inputs p: %f, q: %f, p_des: %f, q_des: %f, p_dot:%f, q_dot:%f \n",(double)p,(double)q,(double)p_des,(double)q_des,(double)p_dot,(double)q_dot);
-                float Ixx=0.0296;
-		float Iyy=0.0296;
-                float Kp1=0.012;
-		float Kp2=0.012;
+                float Ixx=0.011;
+		float Iyy=0.015;
 
-		float Vp=Kp1*(p_des-p);
-		float Vq=Kp2*(q_des-q);
+                float Kp1 = 8.0;
+		float Kp2 = 8.0;
+		float Ki1 = 4.0;
+		float Ki2 = 4.0;
+
+		float p_error = (p_des-p);
+		float q_error = (q_des-q);
+
+		const hrt_abstime now = hrt_absolute_time();
+		const float dt = math::constrain(((now - _last_run) / 1e6f), 0.0002f, 0.02f);
+		_last_run = now;
+
+		p_int = p_int + p_error*dt;
+		q_int = q_int + q_error*dt;
+
+		float Vp=Kp1*p_error + p_int*Ki1;
+		float Vq=Kp2*q_error + q_int*Ki2;
 
 		//Store old values and add new values
 
@@ -193,7 +206,7 @@ MulticopterRateControl::Run()
 		actuators.control[actuator_controls_s::INDEX_PITCH] = pitch/1000;
 		actuators.control[actuator_controls_s::INDEX_THROTTLE] = (t)/1000;
 		actuators.timestamp_sample = angular_velocity.timestamp_sample;
-		actuators.timestamp = hrt_absolute_time();
+		actuators.timestamp = now;
 		_actuators_0_pub.publish(actuators);
 		}
 	}

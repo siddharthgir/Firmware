@@ -671,7 +671,7 @@ mixer_set_failsafe()
 
 		/* scale to servo output */
 		r_page_servo_failsafe[i] = (outputs[i] * 600.0f) + 1500;
-
+		printf("here\n");
 	}
 
 	/* disable the rest of the outputs */
