@@ -277,33 +277,47 @@ MulticopterAttitudeControl::Run()
 
 		if(_vehicle_local_position_setpoint_sub.updated()){
 			_vehicle_local_position_setpoint_sub.update(&currentPosition);
-		}
 
-		if(_vehicle_angular_velocity_sub.updated()){
-			_vehicle_angular_velocity_sub.update(&_angular_velocity);
-		}
+			if(_vehicle_angular_velocity_sub.updated()){
+				_vehicle_angular_velocity_sub.update(&_angular_velocity);
+			}
 
-		if(_estimator_status.update(&_status)){
-			quat_rot = matrix::Quatf{_status.states[0],_status.states[1],_status.states[2],_status.states[3]};
-		}
-		printf("\n \n Entering Attitude Control \n \n");
+			if(_estimator_status.update(&_status)){
+				quat_rot = matrix::Quatf{_status.states[0],_status.states[1],_status.states[2],_status.states[3]};
+			}
+			printf("\n \n Entering Attitude Control \n \n");
 			printf("Input Acceleration: %f %f %f\n",(double)currentPosition.acceleration[0],(double)currentPosition.acceleration[1],(double)currentPosition.acceleration[2]);
 			matrix::Vector3f _acceleration_des(currentPosition.acceleration);
-			//_acceleration_des(0) = math::constrain(_acceleration_des(0),-5.0f,5.0f);
-			//_acceleration_des(1) = math::constrain(_acceleration_des(1),-5.0f,5.0f);
-			//_acceleration_des(2) = math::constrain(_acceleration_des(2),-.0f,5.0f);
+			//_acceleration_des(0) = 0;
+			//_acceleration_des(1) = 0;
+			_acceleration_des(2) = math::constrain(_acceleration_des(2),-5.0f,5.0f);
 			matrix::Vector3f a_des_g = _acceleration_des - _gravity;
 			printf("Input Quat: %f %f %f %f\n",(double)_status.states[0],(double)_status.states[1],(double)_status.states[2],(double)_status.states[3]);
 			printf("Input Angular Velocity: %f %f %f\n",(double)_angular_velocity.xyz[0],(double)_angular_velocity.xyz[1],(double)_angular_velocity.xyz[2]);
 			n_des = a_des_g.normalized();
+
+			const hrt_abstime now = hrt_absolute_time();
+			const float dt = math::constrain(((now - _last_run) / 1e6f), 0.0002f, 0.02f);
+			_last_run = now;
+
+			n_des_d(0) = (n_des(0)- old_n_des(0))/dt;
+			n_des_d(1) = (n_des(1)-old_n_des(1))/dt;
+			n_des_d(2) = (n_des(2)-old_n_des(2))/dt;
+			old_n_des = n_des;
+
 			matrix::Vector3f n_des_b = quat_rot.conjugate(n_des);
+			printf("n_des_b: %f %f %f dt:%f\n",(double)n_des_b(0),(double)n_des_b(1),(double)n_des_b(2),(double)dt);
+			matrix::Vector3f n_des_d_b = quat_rot.conjugate(n_des_d);
+			matrix::Vector2f n_hat{n_des_d_b(0),n_des_d_b(1)};
 			matrix::Vector2f v_out(x_gain*(n_b(0)-n_des_b(0)),y_gain*(n_b(1)-n_des_b(1)));
 			matrix::Vector2f h = matrix::Vector2f(n_des_b(1),-n_des_b(0))*_angular_velocity.xyz[2];
-			matrix::Vector2f RHS = v_out - h;
+			matrix::Vector2f RHS = v_out - h; //- n_hat;
 			float p_des = (1/n_des_b(2))*(RHS(1));
 			float q_des = (-1/n_des_b(2))*(RHS(0));
 
-			float T = -1.4f*(((quat_rot.conjugate(a_des_g))*(n_des_b))/(n_b(2)));
+
+
+			float T = -1.505f*(((quat_rot.conjugate(a_des_g))*(n_des_b))/(n_b(2)));
 			vehicle_mf_angular_velocity_s data{};
 			data.p = p_des;
 			data.q = q_des;
@@ -311,6 +325,9 @@ MulticopterAttitudeControl::Run()
 			printf("Output: p_des: %f q_des: %f T: %f\n",(double)p_des,(double)q_des,(double)T);
 			data.timestamp = hrt_absolute_time();
 			_vehicle_mf_angular_velocity_pub.publish(data);
+		}
+
+
 
 
 	}
@@ -336,7 +353,7 @@ MulticopterAttitudeControl::Run()
 		const hrt_abstime now = hrt_absolute_time();
 
 		// Guard against too small (< 0.2ms) and too large (> 20ms) dt's.
-		const float dt = math::constrain(((now - _last_run) / 1e6f), 0.0002f, 0.02f);
+		const float dt = math::constrain(((now - _last_run) / 1e6f), 0.0001f, 0.1f);
 		_last_run = now;
 
 		/* check for updates in other topics */

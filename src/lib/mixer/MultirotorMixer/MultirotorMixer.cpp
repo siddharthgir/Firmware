@@ -341,20 +341,20 @@ MultirotorMixer::mix(float *outputs, unsigned space)
 
 	if(updated){
 		printf("\n \n Entering Mixer \n \n");
-		float roll    = get_control(0, 0)*1000;//*0.2f;
-		float pitch   = get_control(0, 1)*1000;//*0.2f;
+		float roll    = get_control(0, 0)*1000-0.085f;
+		float pitch   = get_control(0, 1)*1000+0.085f;
 		float yaw     = get_control(0, 2)*1000;
 		float thrust  = get_control(0, 3)*1000;
 
-		//roll = math::constrain(roll,-2.0f,2.0f);
-		//pitch = math::constrain(pitch,-2.0f,2.0f);
+		//roll = math::constrain(roll,-5.0f,5.0f);
+		//pitch = math::constrain(pitch,-5.0f,5.0f);
 		//thrust = math::constrain(thrust,0.0f,50.0f);
 
 		printf("Input received: roll:%f pitch:%f yaw:%f thrust:%f \n",(double)roll,(double)pitch,(double)yaw,(double)thrust);
 		float b = 0.00000854858f;
 		float l = 0.20f;
 		float c = 0.70721f;
-		float maxVel = 1800*1800;
+		float maxVel = 1300*1300;
 		outputs[0] = 0.0f;
 		outputs[1] = (c*roll)/(l*b)-(c*pitch)/(l*b);
 		outputs[2] = ((thrust/(2*b)) + (c*pitch/(2*l*b)));

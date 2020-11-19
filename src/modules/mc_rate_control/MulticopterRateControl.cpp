@@ -166,35 +166,35 @@ MulticopterRateControl::Run()
                 // fetching current angular acceleration
                vehicle_angular_acceleration_s v_angular_acceleration{};
 	       if( _vehicle_angular_acceleration_sub.update(&v_angular_acceleration)){
-			p_dot=v_angular_acceleration.xyz[0];
-			q_dot=v_angular_acceleration.xyz[1];
+			p_dot=math::constrain(v_angular_acceleration.xyz[0],-20.0f,20.0f);
+			q_dot=math::constrain(v_angular_acceleration.xyz[1],-20.0f,20.0f);
 	        }
 		printf("Inputs p: %f, q: %f, p_des: %f, q_des: %f, p_dot:%f, q_dot:%f \n",(double)p,(double)q,(double)p_des,(double)q_des,(double)p_dot,(double)q_dot);
                 float Ixx=0.011;
 		float Iyy=0.015;
 
-                float Kp1 = 8.0;
-		float Kp2 = 8.0;
-		float Ki1 = 4.0;
-		float Ki2 = 4.0;
+                float Kp1 = 20.0;
+		float Kp2 = 20.0;
+		float Ki1 = 0.0;
+		float Ki2 = 0.0;
 
 		float p_error = (p_des-p);
 		float q_error = (q_des-q);
 
 		const hrt_abstime now = hrt_absolute_time();
-		const float dt = math::constrain(((now - _last_run) / 1e6f), 0.0002f, 0.02f);
+		//const float dt = math::constrain(((now - _last_run) / 1e6f), 0.0002f, 0.02f);
 		_last_run = now;
 
-		p_int = p_int + p_error*dt;
-		q_int = q_int + q_error*dt;
+		//p_int = p_int + p_error*dt;
+		//q_int = q_int + q_error*dt;
 
 		float Vp=Kp1*p_error + p_int*Ki1;
 		float Vq=Kp2*q_error + q_int*Ki2;
 
 		//Store old values and add new values
-
-		roll = roll + (Ixx*(Vp-p_dot));
-		pitch = pitch + (Iyy*(Vq-q_dot));
+		printf("Torque Change: roll: %f pitch: %f\n",(double)(Ixx*(Vp-p_dot)),(double)(Iyy*(Vq-q_dot)));
+		roll = (1.0f)*roll + (Ixx*(Vp-p_dot));
+		pitch = (1.0f)*pitch + (Iyy*(Vq-q_dot));
 
 		if (angular_mf_velocity.t > 0.0001f){
 			t = angular_mf_velocity.t;

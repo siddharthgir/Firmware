@@ -11,6 +11,7 @@ if [ $AUTOCNF = yes ]
 then
 	param set MC_PITCHRATE_P 0.1
 	param set MC_ROLLRATE_P 0.1
+	param set IMU_GYRO_RATEMAX 2000
 fi
 
 set MIXER quad_x

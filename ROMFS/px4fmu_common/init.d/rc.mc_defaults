@@ -8,6 +8,7 @@
 set VEHICLE_TYPE mc
 
 param set M_FAILURE 0
+param set IMU_GYRO_RATEMAX 2000
 
 if [ $AUTOCNF = yes ]
 then
