@@ -341,24 +341,35 @@ MultirotorMixer::mix(float *outputs, unsigned space)
 
 	if(updated){
 		printf("\n \n Entering Mixer \n \n");
-		float roll    = get_control(0, 0)*1000-0.085f;
-		float pitch   = get_control(0, 1)*1000+0.085f;
+		float roll    = get_control(0, 0)*1000;
+		float pitch   = get_control(0, 1)*1000;
 		float yaw     = get_control(0, 2)*1000;
 		float thrust  = get_control(0, 3)*1000;
 
-		//roll = math::constrain(roll,-5.0f,5.0f);
-		//pitch = math::constrain(pitch,-5.0f,5.0f);
-		//thrust = math::constrain(thrust,0.0f,50.0f);
+		//roll = math::constrain(roll,-2.0f,2.0f);
+		//pitch = math::constrain(pitch,-2.0f,2.0f);
+		thrust = math::constrain(thrust,0.0f,30.0f);
+
+		if (pitch > roll){
+			float avg = (pitch + roll)/(2.0f);
+			pitch = avg;
+			roll = avg;
+		}
 
 		printf("Input received: roll:%f pitch:%f yaw:%f thrust:%f \n",(double)roll,(double)pitch,(double)yaw,(double)thrust);
 		float b = 0.00000854858f;
-		float l = 0.20f;
-		float c = 0.70721f;
+		float l = 0.14745f;
+		//float c = 0.70721f;
 		float maxVel = 1300*1300;
+
+		outputs[1] = (roll)/(2*l*b)-(pitch)/(2*l*b);
+		outputs[2] = ((thrust/(2*b)) + (pitch/(2*l*b)));
+		outputs[3] = (thrust/(2*b)) - (roll/(2*l*b));
 		outputs[0] = 0.0f;
-		outputs[1] = (c*roll)/(l*b)-(c*pitch)/(l*b);
-		outputs[2] = ((thrust/(2*b)) + (c*pitch/(2*l*b)));
-		outputs[3] = (thrust/(2*b)) - (c*roll/(2*l*b));
+
+		float t = (outputs[1] + outputs[2] + outputs[3])*b;
+		float r = (outputs[1]*l*b) + (outputs[2]*l*b) -  (outputs[3]*l*b);
+		float p = -(outputs[1])*l*b + (outputs[2])*l*b - (outputs[3])*l*b;
 		printf("Motors values output: %f %f %f %f \n",(double)outputs[0],(double)outputs[1],(double)outputs[2],(double)outputs[3]);
 		for (unsigned i = 1; i < _rotor_count; i++) {
 		// Implement simple model for static relationship between applied motor pwm and motor thrust
@@ -366,7 +377,9 @@ MultirotorMixer::mix(float *outputs, unsigned space)
 		float temp = math::constrain(outputs[i]/maxVel, 0.0f, 1.0f);
 		outputs[i] = temp*2.0f - 1.0f;
 		}
+
 		printf("Motors values normalized: %f %f %f %f \n",(double)outputs[0],(double)outputs[1],(double)outputs[2],(double)outputs[3]);
+		printf("Torques generated: %f %f %f\n",(double)t,(double)r,(double)p);
 		return _rotor_count;
 	}
 

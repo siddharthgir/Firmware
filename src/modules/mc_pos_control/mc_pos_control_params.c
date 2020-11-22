@@ -143,7 +143,7 @@ PARAM_DEFINE_FLOAT(MPC_MANTHR_MIN, 0.08f);
  * @decimal 2
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_FLOAT(MPC_Z_P, 1.0f);
+PARAM_DEFINE_FLOAT(MPC_Z_P, 0.0f);
 
 /**
  * Proportional gain for vertical velocity error
@@ -155,7 +155,7 @@ PARAM_DEFINE_FLOAT(MPC_Z_P, 1.0f);
  * @decimal 2
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_FLOAT(MPC_Z_VEL_P_ACC, 4.0f);
+PARAM_DEFINE_FLOAT(MPC_Z_VEL_P_ACC, 3.0f);
 
 /**
  * Integral gain for vertical velocity error
@@ -169,7 +169,7 @@ PARAM_DEFINE_FLOAT(MPC_Z_VEL_P_ACC, 4.0f);
  * @decimal 3
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_FLOAT(MPC_Z_VEL_I_ACC, 2.0f);
+PARAM_DEFINE_FLOAT(MPC_Z_VEL_I_ACC, 0.5f);
 
 /**
  * Differential gain for vertical velocity error
@@ -181,7 +181,7 @@ PARAM_DEFINE_FLOAT(MPC_Z_VEL_I_ACC, 2.0f);
  * @decimal 3
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_FLOAT(MPC_Z_VEL_D_ACC, 0.0f);
+PARAM_DEFINE_FLOAT(MPC_Z_VEL_D_ACC, 0.01f);
 
 /**
  * Maximum vertical ascent velocity
@@ -216,7 +216,7 @@ PARAM_DEFINE_FLOAT(MPC_Z_VEL_MAX_DN, 1.0f);
  * @decimal 2
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_FLOAT(MPC_XY_P, 0.95f);
+PARAM_DEFINE_FLOAT(MPC_XY_P, 2.0f);
 
 /**
  * Proportional gain for horizontal velocity error
@@ -228,7 +228,7 @@ PARAM_DEFINE_FLOAT(MPC_XY_P, 0.95f);
  * @decimal 2
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_FLOAT(MPC_XY_VEL_P_ACC, 1.8f);
+PARAM_DEFINE_FLOAT(MPC_XY_VEL_P_ACC, 3.0f);
 
 /**
  * Integral gain for horizontal velocity error
@@ -241,7 +241,7 @@ PARAM_DEFINE_FLOAT(MPC_XY_VEL_P_ACC, 1.8f);
  * @decimal 3
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_FLOAT(MPC_XY_VEL_I_ACC, 0.4f);
+PARAM_DEFINE_FLOAT(MPC_XY_VEL_I_ACC, 0.5f);
 
 /**
  * Differential gain for horizontal velocity error. Small values help reduce fast oscillations. If value is too big oscillations will appear again.
@@ -253,7 +253,7 @@ PARAM_DEFINE_FLOAT(MPC_XY_VEL_I_ACC, 0.4f);
  * @decimal 3
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_FLOAT(MPC_XY_VEL_D_ACC, 0.2f);
+PARAM_DEFINE_FLOAT(MPC_XY_VEL_D_ACC, 0.1f);
 
 /**
  * Maximum horizontal velocity in mission
@@ -269,7 +269,7 @@ PARAM_DEFINE_FLOAT(MPC_XY_VEL_D_ACC, 0.2f);
  * @decimal 2
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_FLOAT(MPC_XY_CRUISE, 5.0f);
+PARAM_DEFINE_FLOAT(MPC_XY_CRUISE, 3.0f);
 
 /**
  * Proportional gain for horizontal trajectory position error
@@ -308,7 +308,7 @@ PARAM_DEFINE_FLOAT(MPC_VEL_MANUAL, 10.0f);
  * @decimal 2
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_FLOAT(MPC_XY_VEL_MAX, 12.0f);
+PARAM_DEFINE_FLOAT(MPC_XY_VEL_MAX, 2.0f);
 
 /**
  * Maximum tilt angle in air
@@ -321,7 +321,7 @@ PARAM_DEFINE_FLOAT(MPC_XY_VEL_MAX, 12.0f);
  * @decimal 1
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_FLOAT(MPC_TILTMAX_AIR, 45.0f);
+PARAM_DEFINE_FLOAT(MPC_TILTMAX_AIR, 25.0f);
 
 /**
  * Maximum tilt during landing
@@ -339,7 +339,7 @@ PARAM_DEFINE_FLOAT(MPC_TILTMAX_LND, 12.0f);
 /**
  * Landing descend rate
  *
- * @unit m/s
+ * @unit m/sn_des_b(2)
  * @min 0.6
  * @decimal 1
  * @group Multicopter Position Control

@@ -119,6 +119,13 @@ private:
 	vehicle_control_mode_s		_v_control_mode{};
 	vehicle_status_s		_vehicle_status{};
 
+	float Kp1 = 12.0;
+	float Kp2 = 12.0;
+	float Ki1 = 0.05;
+	float Ki2 = 0.05;
+	float Kd1 = 1.0;
+	float Kd2 = 1.0;
+
 	float p_des{};
 	float q_des{};
 
@@ -127,6 +134,9 @@ private:
 
 	float p_int{};
 	float q_int{};
+
+	//float old_p_error{};
+	//float old_q_error{};
 
 	float roll{};
 	float pitch{};

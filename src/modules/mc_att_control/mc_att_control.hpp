@@ -147,7 +147,7 @@ private:
 	matrix::Vector3f n_des;
 	matrix::Vector3f old_n_des{0,0,0};
 	matrix::Vector3f n_des_d;
-	matrix::Vector3f n_b{0,0,-1};
+	matrix::Vector3f n_b{0.0,0.0,-1};
 	matrix::Vector3f _rates_sp; ///< angular rates setpoint
 
 

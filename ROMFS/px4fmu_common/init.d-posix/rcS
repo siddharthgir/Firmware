@@ -193,7 +193,7 @@ fi
 param set COM_CPU_MAX -1 # disable check, no CPU load reported on posix yet
 
 # Simulator IMU data provided at 250 Hz
-param set IMU_INTEG_RATE 500
+param set IMU_INTEG_RATE 1000
 
 # Adapt timeout parameters if simulation runs faster or slower than realtime.
 if [ -n "$PX4_SIM_SPEED_FACTOR" ]; then

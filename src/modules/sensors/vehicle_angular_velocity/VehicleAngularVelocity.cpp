@@ -48,7 +48,7 @@ VehicleAngularVelocity::VehicleAngularVelocity() :
 	_lp_filter_velocity.set_cutoff_frequency(kInitialRateHz, _param_imu_gyro_cutoff.get());
 	_notch_filter_velocity.setParameters(kInitialRateHz, _param_imu_gyro_nf_freq.get(), _param_imu_gyro_nf_bw.get());
 
-	_lp_filter_acceleration.set_cutoff_frequency(kInitialRateHz, _param_imu_dgyro_cutoff.get());
+	_lp_filter_acceleration.set_cutoff_frequency(kInitialRateHz, 20);
 }
 
 VehicleAngularVelocity::~VehicleAngularVelocity()
@@ -305,7 +305,6 @@ void VehicleAngularVelocity::Run()
 
 				if (_param_imu_gyro_rate_max.get() > 0) {
 					const uint64_t interval = 1e6f / _param_imu_gyro_rate_max.get();
-
 					if (hrt_elapsed_time(&_last_publish) < interval) {
 						publish = false;
 					}

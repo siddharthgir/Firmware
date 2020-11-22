@@ -179,7 +179,7 @@ void Simulator::send_controls()
 {
 	orb_copy(ORB_ID(actuator_outputs), _actuator_outputs_sub, &_actuator_outputs);
 	if (_actuator_outputs.timestamp > 0) {
-		/*if (disabled_motor != 0) {
+		/*if (disabled_motor == 0) {
 			printf("\n \n Sending output \n \n");
 			for (int i =0;i<4;i++){
 				printf("Motor %d val %f\n",i,(double)_actuator_outputs.output[i]);
@@ -222,6 +222,7 @@ void Simulator::update_sensors(const hrt_abstime &time, const mavlink_hil_sensor
 
 	// gyro
 	if ((sensors.fields_updated & SensorSource::GYRO) == SensorSource::GYRO && !_param_sim_gyro_block.get()) {
+		//printf("%d\n",time);
 		_px4_gyro.update(time, sensors.xgyro, sensors.ygyro, sensors.zgyro);
 	}
 
