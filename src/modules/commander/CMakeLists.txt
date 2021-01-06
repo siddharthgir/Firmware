@@ -62,6 +62,7 @@ px4_add_module(
 		ArmAuthorization
 		HealthFlags
 		sensor_calibration
+		pugixml
 	)
 
 if(PX4_TESTING)

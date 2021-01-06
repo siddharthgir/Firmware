@@ -39,6 +39,10 @@
 
 #include <drivers/drv_hrt.h>
 #include <HealthFlags.h>
+#include <dirent.h>
+//#include <libxml/parser.h>
+#include <pugixml.hpp>
+
 #include <lib/parameters/param.h>
 #include <systemlib/mavlink_log.h>
 #include <uORB/Subscription.hpp>
@@ -61,8 +65,31 @@ bool PreFlightCheck::preflightCheck(orb_advert_t *mavlink_log_pub, vehicle_statu
 	report_failures = (report_failures && status_flags.condition_system_hotplug_timeout
 			   && !status_flags.condition_calibration_enabled);
 
-	bool failed = false;
 
+	FILE * file;
+	file = fopen("permission_artifact_breach.xml", "r");
+	if (file){
+	//printf("file exists\n");
+	pugi::xml_document doc;
+
+    	doc.load_file("permission_artifact_breach.xml");
+	std::string end_time = doc.first_child().first_child().child("FlightDetails").child("FlightParameters").attribute("flightEndTime").value();
+	std::string start_time = doc.first_child().first_child().child("FlightDetails").child("FlightParameters").attribute("flightStartTime").value();
+	int has_artifact = 1;
+	param_set(param_find("PERM_ARTIFACT"),&has_artifact);
+
+   	fclose(file);
+	}
+
+	else{
+   	//file doesn't exists or cannot be opened (es. you don't have access permission)
+	   	int has_artifact = 0;
+	param_set(param_find("PERM_ARTIFACT"),&has_artifact);
+	printf("No Permission Artifact Found \n");
+	return false;
+	}
+
+	bool failed = false;
 	failed = failed || !airframeCheck(mavlink_log_pub, status);
 
 	/* ---- MAG ---- */

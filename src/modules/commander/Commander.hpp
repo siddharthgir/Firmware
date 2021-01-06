@@ -268,7 +268,8 @@ private:
 		(ParamInt<px4::params::MAV_SYS_ID>) _param_mav_sys_id,
 		(ParamInt<px4::params::MAV_TYPE>) _param_mav_type,
 
-		(ParamFloat<px4::params::CP_DIST>) _param_cp_dist
+		(ParamFloat<px4::params::CP_DIST>) _param_cp_dist,
+		(ParamBool<px4::params::PERM_ARTIFACT>) _param_perm_artifact
 	)
 
 	enum class PrearmedMode {

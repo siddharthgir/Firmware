@@ -57,6 +57,8 @@
  */
 PARAM_DEFINE_FLOAT(TRIM_ROLL, 0.0f);
 
+PARAM_DEFINE_INT32(PERM_ARTIFACT,0);
+
 /**
  * Pitch trim
  *

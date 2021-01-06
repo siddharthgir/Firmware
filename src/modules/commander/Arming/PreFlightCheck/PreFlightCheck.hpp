@@ -43,6 +43,8 @@
 #include <uORB/topics/safety.h>
 #include <uORB/topics/vehicle_status_flags.h>
 
+//#include <filesystem>
+#include <uORB/topics/parameter_update.h>
 #include <uORB/topics/vehicle_status.h>
 #include <drivers/drv_hrt.h>
 
@@ -115,7 +117,6 @@ private:
 
 	static bool failureDetectorCheck(orb_advert_t *mavlink_log_pub, const vehicle_status_s &status, const bool report_fail,
 					 const bool prearm);
-
 	static bool manualControlCheck(orb_advert_t *mavlink_log_pub, const bool report_fail);
 	static bool airframeCheck(orb_advert_t *mavlink_log_pub, const vehicle_status_s &status);
 	static bool cpuResourceCheck(orb_advert_t *mavlink_log_pub, const bool report_fail);

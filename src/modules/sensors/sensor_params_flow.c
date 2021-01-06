@@ -83,7 +83,7 @@ PARAM_DEFINE_FLOAT(SENS_FLOW_MINHGT, 0.7f);
  * @decimal 1
  * @group Sensor Calibration
  */
-PARAM_DEFINE_FLOAT(SENS_FLOW_MAXHGT, 3.0f);
+PARAM_DEFINE_FLOAT(SENS_FLOW_MAXHGT, 25.0f);
 
 /**
  * Magnitude of maximum angular flow rate reliably measurable by the optical flow sensor.
