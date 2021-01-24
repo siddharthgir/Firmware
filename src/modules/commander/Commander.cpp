@@ -41,7 +41,6 @@
  *			- Commander is rewritten as class
  *			- State machines will be model driven
  */
-
 #include "Commander.hpp"
 
 /* commander module headers */

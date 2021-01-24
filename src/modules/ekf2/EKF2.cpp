@@ -32,18 +32,221 @@
  ****************************************************************************/
 
 #include "EKF2.hpp"
-
+#define INF 10000000000000.0
 using namespace time_literals;
 using math::constrain;
 using matrix::Eulerf;
 using matrix::Quatf;
 using matrix::Vector3f;
 
+
 pthread_mutex_t ekf2_module_mutex = PTHREAD_MUTEX_INITIALIZER;
 static px4::atomic<EKF2 *> _objects[EKF2_MAX_INSTANCES] {};
 #if !defined(CONSTRAINED_FLASH)
 static px4::atomic<EKF2Selector *> _ekf2_selector {nullptr};
 #endif // !CONSTRAINED_FLASH
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct ParsedData{
+   char* start_time;
+   char* end_time;
+   float long_lat_coords[20][10];
+   int num_coords;
+   char certificate[2000];
+};
+
+char* strip_1(char *str) {
+    size_t len = strlen(str);
+    memmove(str, str+1, len-2);
+    str[len-2] = 0;
+    return str;
+}
+
+int length_1(char a[1000]){
+    int count=0;
+while(a[ count ] != '\0'){
+    count=count+1;
+}
+return count;
+
+}/* Driver code */
+
+int isSubstring_1(char s1[50], char s2[100])///s1 is the sub string ; s2 is the larger string
+{
+    int M = length_1(s1);
+    int N = length_1(s2);
+
+    for (int i = 0; i <= N - M; i++) {
+        int j;
+
+        for (j = 0; j < M; j++)
+            if (s2[i + j] != s1[j])
+                break;
+
+        if (j == M)
+            return i;
+    }
+
+    return -1;
+}
+
+
+ParsedData parse_artifact_1()
+{
+   FILE *fp;
+
+   ParsedData result{};
+
+   fp = fopen("permission_artifact_breach.xml", "r"); // read mode
+
+
+
+   char certi_tagi[30]="<X509Certificate>";
+   char certi_tage[30]="</X509Certificate>";
+
+   char buf[100000], start_time[200], end_time[200],long_lat_coords[20][20];
+   rewind(fp);
+   int c_flag_i=0,c_flag_e=0,line;
+   line=0;
+   int index[2][2]={{0,0},{0,0}};
+   int coord_ind = 0;
+   int let =0;
+   (void)let;
+   int aux=0;
+   while(fscanf(fp, "%s", buf) != EOF )
+		{  line=line+1;
+      if(isSubstring_1(certi_tagi,buf)!=-1 || isSubstring_1(certi_tage,buf)!=-1 ){
+
+       if (isSubstring_1(certi_tagi,buf)!=-1){       //for "<X509Certificate>"
+           index[0][0]=line;
+           index[0][1]=isSubstring_1(certi_tagi,buf);
+           c_flag_i=1;
+           let =length_1(buf);
+           aux=1;
+       }
+       if(isSubstring_1(certi_tage,buf)!=-1){                          //for "</X509Certificate>"
+           index[1][0]=line;
+           index[1][1]=isSubstring_1(certi_tage,buf);
+           c_flag_e=1;
+
+       }
+     //   printf("length %d\n",length(buf));
+
+      }
+         if(c_flag_i==1 && c_flag_e==0){
+         if (aux==1){
+         for(int u=index[0][1]+17;u<length_1(buf);u++){
+           printf("%c",buf[u]);
+         }
+         aux=0;
+         }
+         else{
+            printf("%s\n",buf);
+         }
+         }
+    //     printf("%s\n",buf);
+         int succ = 0;
+         succ = sscanf(buf,"flightEndTime=%s",buf);
+			if (succ != 0)strcpy(end_time,strip_1(buf));
+         succ = sscanf(buf,"flightStartTime=%s",buf);
+			if (succ != 0) strcpy(start_time,strip_1(buf));
+         succ = sscanf(buf,"latitude=%s>",buf);
+         if (succ != 0) {
+            strcpy(long_lat_coords[coord_ind],strip_1(buf));
+            coord_ind++;
+         }
+         succ = sscanf(buf,"longitude=%[^/>]s>",buf);
+         if (succ != 0) {
+            strcpy(long_lat_coords[coord_ind],strip_1(buf));
+            coord_ind++;
+         }
+		}
+      for (int i=0;i<2;i++){
+         for(int j=0;j<2;j++){
+            printf("%d ",index[i][j]);
+         }
+         printf("\n");
+      }
+      result.start_time = start_time;
+      result.end_time = end_time;
+      result.num_coords = static_cast<int>(coord_ind/2);
+      for(int i  = 0; i <coord_ind;i+=2){
+         result.long_lat_coords[i][0] = atof(long_lat_coords[i]);
+         result.long_lat_coords[i][1] = atof(long_lat_coords[i+1]);
+      }
+   fclose(fp);
+   return result;
+}
+
+
+/************************Check if point inside polygon*****************/
+
+bool onSegment(PolyPoint p, PolyPoint q, PolyPoint r)
+{
+    if (q.x <= std::max(p.x, r.x) && q.x >= std::min(p.x, r.x) &&
+            q.y <= std::max(p.y, r.y) && q.y >= std::min(p.y, r.y))
+        return true;
+    return false;
+}
+
+long int orientation(PolyPoint p, PolyPoint q, PolyPoint r)
+{
+    long int val = (q.y - p.y) * (r.x - q.x) -
+            (q.x - p.x) * (r.y - q.y);
+
+    if (val == 0) return 0; // colinear
+    return (val > 0)? 1: 2; // clock or counterclock wise
+}
+
+bool doIntersect(PolyPoint p1, PolyPoint q1, PolyPoint p2, PolyPoint q2)
+{
+    long int o1 = orientation(p1, q1, p2);
+    long int o2 = orientation(p1, q1, q2);
+    long int o3 = orientation(p2, q2, p1);
+    long int o4 = orientation(p2, q2, q1);
+
+    // General case
+    if (o1 != o2 && o3 != o4)
+        return true;
+
+    // Special Cases
+    if (o1 == 0 && onSegment(p1, p2, q1)) return true;
+    if (o2 == 0 && onSegment(p1, q2, q1)) return true;
+    if (o3 == 0 && onSegment(p2, p1, q2)) return true;
+    if (o4 == 0 && onSegment(p2, q1, q2)) return true;
+
+    return false; // Doesn't fall in any of the above cases
+}
+
+bool isInside(std::vector<PolyPoint> polygon, long int n, PolyPoint p)
+{
+    if (n < 3) return false;
+
+    // Create a PolyPoint for line segment from p to infinite
+    PolyPoint extreme = {INF, p.y};
+
+    long int count = 0, i = 0;
+    do
+    {
+        long int next = (i+1)%n;
+        if (doIntersect(polygon[i], polygon[next], p, extreme))
+        {
+            if (orientation(polygon[i], p, polygon[next]) == 0)
+            return onSegment(polygon[i], p, polygon[next]);
+
+            count++;
+        }
+        i = next;
+    } while (i != 0);
+
+    // Return true if count is odd, false otherwise
+    return count&1;
+}
+/**********************************************************************/
 
 EKF2::EKF2(bool multi_mode, const px4::wq_config_t &config, bool replay_mode):
 	ModuleParams(nullptr),
@@ -1353,9 +1556,39 @@ bool EKF2::UpdateFlowSample(ekf2_timestamps_s &ekf2_timestamps, optical_flow_s &
 
 void EKF2::UpdateGpsSample(ekf2_timestamps_s &ekf2_timestamps)
 {
+
+
 	// EKF GPS message
 	if (_param_ekf2_aid_mask.get() & MASK_USE_GPS) {
 		vehicle_gps_position_s vehicle_gps_position;
+
+	int has_artifact = 0;
+	param_get(param_find("PERM_ARTIFACT"),&has_artifact);
+	if (has_artifact != 0){
+		if(geofence.size() == 0){
+		ParsedData data = parse_artifact_1();
+		for(int i = 0; i < data.num_coords;i++){
+			PolyPoint c = PolyPoint{data.long_lat_coords[i][0],data.long_lat_coords[i][1]};
+			geofence.push_back(c);
+		}
+		}
+	}
+	else if(!has_artifact){
+		geofence.clear();
+	}
+
+        PolyPoint p = {static_cast<float>(vehicle_gps_position.lat), static_cast<float>(vehicle_gps_position.lon)};
+        if((geofence.size() > 0) && isInside(geofence, geofence.size(), p))
+	{
+		int in_fence = 1;
+		param_set(param_find("IN_FENCE"),&in_fence);
+	}
+        else
+	{
+		int in_fence = 0;
+		param_set(param_find("IN_FENCE"),&in_fence);
+	}//lat:473979216    lon:85455682
+
 
 		if (_vehicle_gps_position_sub.update(&vehicle_gps_position)) {
 			gps_message gps_msg{

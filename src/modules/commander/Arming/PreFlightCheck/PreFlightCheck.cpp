@@ -43,6 +43,143 @@
 #include <systemlib/mavlink_log.h>
 #include <uORB/Subscription.hpp>
 
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct ParsedData{
+   char* start_time;
+   char* end_time;
+   float long_lat_coords[20][10];
+   int num_coords;
+   char certificate[2000];
+};
+
+char* strip(char *str) {
+    size_t len = strlen(str);
+    memmove(str, str+1, len-2);
+    str[len-2] = 0;
+    return str;
+}
+
+int length(char a[1000]){
+    int count=0;
+while(a[ count ] != '\0'){
+    count=count+1;
+}
+return count;
+
+}/* Driver code */
+
+int isSubstring(char s1[50], char s2[100])///s1 is the sub string ; s2 is the larger string
+{
+    int M = length(s1);
+    int N = length(s2);
+
+    for (int i = 0; i <= N - M; i++) {
+        int j;
+
+        for (j = 0; j < M; j++)
+            if (s2[i + j] != s1[j])
+                break;
+
+        if (j == M)
+            return i;
+    }
+
+    return -1;
+}
+
+
+ParsedData parse_artifact()
+{
+   FILE *fp;
+
+   ParsedData result{};
+
+   fp = fopen("permission_artifact_breach.xml", "r"); // read mode
+
+
+
+   char certi_tagi[30]="<X509Certificate>";
+   char certi_tage[30]="</X509Certificate>";
+
+   char buf[100000], start_time[200], end_time[200],long_lat_coords[20][20];
+   rewind(fp);
+   int c_flag_i=0,c_flag_e=0,line;
+   line=0;
+   int index[2][2]={{0,0},{0,0}};
+   int coord_ind = 0;
+   int let =0;
+   (void)let;
+   int aux=0;
+   while(fscanf(fp, "%s", buf) != EOF )
+		{  line=line+1;
+      if(isSubstring(certi_tagi,buf)!=-1 || isSubstring(certi_tage,buf)!=-1 ){
+
+       if (isSubstring(certi_tagi,buf)!=-1){       //for "<X509Certificate>"
+           index[0][0]=line;
+           index[0][1]=isSubstring(certi_tagi,buf);
+           c_flag_i=1;
+           let =length(buf);
+           aux=1;
+       }
+       if(isSubstring(certi_tage,buf)!=-1){                          //for "</X509Certificate>"
+           index[1][0]=line;
+           index[1][1]=isSubstring(certi_tage,buf);
+           c_flag_e=1;
+
+       }
+     //   printf("length %d\n",length(buf));
+
+      }
+         if(c_flag_i==1 && c_flag_e==0){
+         if (aux==1){
+         for(int u=index[0][1]+17;u<length(buf);u++){
+           printf("%c",buf[u]);
+         }
+         aux=0;
+         }
+         else{
+            printf("%s\n",buf);
+         }
+         }
+    //     printf("%s\n",buf);
+         int succ = 0;
+         succ = sscanf(buf,"flightEndTime=%s",buf);
+			if (succ != 0)strcpy(end_time,strip(buf));
+         succ = sscanf(buf,"flightStartTime=%s",buf);
+			if (succ != 0) strcpy(start_time,strip(buf));
+         succ = sscanf(buf,"latitude=%s>",buf);
+         if (succ != 0) {
+            strcpy(long_lat_coords[coord_ind],strip(buf));
+            coord_ind++;
+         }
+         succ = sscanf(buf,"longitude=%[^/>]s>",buf);
+         if (succ != 0) {
+            strcpy(long_lat_coords[coord_ind],strip(buf));
+            coord_ind++;
+         }
+		}
+      for (int i=0;i<2;i++){
+         for(int j=0;j<2;j++){
+            printf("%d ",index[i][j]);
+         }
+         printf("\n");
+      }
+      result.start_time = start_time;
+      result.end_time = end_time;
+      result.num_coords = static_cast<int>(coord_ind/2);
+      for(int i  = 0; i <coord_ind;i+=2){
+         result.long_lat_coords[i][0] = atof(long_lat_coords[i]);
+         result.long_lat_coords[i][1] = atof(long_lat_coords[i+1]);
+      }
+   fclose(fp);
+   return result;
+}
+
+
 using namespace time_literals;
 
 static constexpr unsigned max_mandatory_gyro_count = 1;
@@ -61,6 +198,35 @@ bool PreFlightCheck::preflightCheck(orb_advert_t *mavlink_log_pub, vehicle_statu
 	report_failures = (report_failures && status_flags.condition_system_hotplug_timeout
 			   && !status_flags.condition_calibration_enabled);
 
+	FILE * file;
+	file = fopen("permission_artifact_breach.xml", "r");
+	if (file){
+	//printf("file exists\n");
+	fclose(file);
+	ParsedData data= parse_artifact();
+	(void) data;
+	/*
+	Add code comparing data.start_time and data.end_time with current local time.
+	Return false if time requirement is not satisfied, otherwise continue with
+	other checks
+	Also add code to check if certificate is valid, otherwise return false
+	*/
+	int has_artifact = 1;
+	param_set(param_find("PERM_ARTIFACT"),&has_artifact);
+	}
+
+	else{
+   	//file doesn't exists or cannot be opened (es. you don't have access permission)
+	int has_artifact = 0;
+	param_set(param_find("PERM_ARTIFACT"),&has_artifact);
+	printf("No Permission Artifact Found \n");
+	return false;
+	}
+
+	int in_fence = 0;
+	param_get(param_find("IN_FENCE"),&in_fence);
+
+	if (!in_fence) return false;
 	bool failed = false;
 
 	failed = failed || !airframeCheck(mavlink_log_pub, status);

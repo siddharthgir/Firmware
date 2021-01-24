@@ -40,7 +40,6 @@
  * @author Thomas Gubler <thomas@px4.io>
  * @author Julian Oes <julian@px4.io>
  */
-
 /**
  * Roll trim
  *
@@ -968,3 +967,7 @@ PARAM_DEFINE_FLOAT(COM_LKDOWN_TKO, 3.0f);
 * @value 1 Enabled
 */
 PARAM_DEFINE_INT32(COM_ARM_ARSP_EN, 1);
+
+PARAM_DEFINE_INT32(PERM_ARTIFACT,0);
+
+PARAM_DEFINE_INT32(IN_FENCE,0);

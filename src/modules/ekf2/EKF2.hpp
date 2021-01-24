@@ -43,6 +43,8 @@
 #include "EKF2Selector.hpp"
 
 #include <float.h>
+#include <vector>
+
 
 #include <containers/LockGuard.hpp>
 #include <drivers/drv_hrt.h>
@@ -87,8 +89,13 @@
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/wind_estimate.h>
 #include <uORB/topics/yaw_estimator_status.h>
-
 #include "Utility/PreFlightChecker.hpp"
+
+struct PolyPoint
+{
+    float x;
+    float y;
+};
 
 extern pthread_mutex_t ekf2_module_mutex;
 
@@ -186,7 +193,7 @@ private:
 	bool _mag_decl_saved = false;	///< true when the magnetic declination has been saved
 
 	bool _had_valid_terrain{false};			///< true if at any time there was a valid terrain estimate
-
+	std::vector<PolyPoint> geofence{};
 	uint64_t _gps_time_usec{0};
 	int32_t _gps_alttitude_ellipsoid{0};			///< altitude in 1E-3 meters (millimeters) above ellipsoid
 	uint64_t _gps_alttitude_ellipsoid_previous_timestamp{0}; ///< storage for previous timestamp to compute dt

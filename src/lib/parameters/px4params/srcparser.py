@@ -319,6 +319,7 @@ class SourceParser(object):
                             elif tag == "boolean":
                                 param.SetBoolean()
                             elif tag not in self.valid_tags:
+                                print(tags)
                                 sys.stderr.write("Skipping invalid documentation tag: '%s'\n" % tag)
                                 return False
                             else:
