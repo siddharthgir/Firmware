@@ -222,7 +222,7 @@ bool doIntersect(PolyPoint p1, PolyPoint q1, PolyPoint p2, PolyPoint q2)
     return false; // Doesn't fall in any of the above cases
 }
 
-bool isInside(std::vector<PolyPoint> polygon, long int n, PolyPoint p)
+bool isInside(PolyPoint* polygon, long int n, PolyPoint p)
 {
     if (n < 3) return false;
 
@@ -1564,21 +1564,22 @@ void EKF2::UpdateGpsSample(ekf2_timestamps_s &ekf2_timestamps)
 
 	int has_artifact = 0;
 	param_get(param_find("PERM_ARTIFACT"),&has_artifact);
-	if (has_artifact != 0){
-		if(geofence.size() == 0){
+	if (has_artifact){
+		if(geofence_size == 0){
 		ParsedData data = parse_artifact_1();
+		geofence_size = data.num_coords;
 		for(int i = 0; i < data.num_coords;i++){
 			PolyPoint c = PolyPoint{data.long_lat_coords[i][0],data.long_lat_coords[i][1]};
-			geofence.push_back(c);
+			geofence[i] = c;
 		}
 		}
 	}
 	else if(!has_artifact){
-		geofence.clear();
+		geofence_size = 0;
 	}
 
         PolyPoint p = {static_cast<float>(vehicle_gps_position.lat), static_cast<float>(vehicle_gps_position.lon)};
-        if((geofence.size() > 0) && isInside(geofence, geofence.size(), p))
+        if((geofence_size> 0) && isInside(geofence, geofence_size, p))
 	{
 		int in_fence = 1;
 		param_set(param_find("IN_FENCE"),&in_fence);
