@@ -42,7 +42,7 @@
 
 #include <uORB/topics/safety.h>
 #include <uORB/topics/vehicle_status_flags.h>
-
+#include <uORB/topics/vehicle_gps_position.h>
 #include <uORB/topics/vehicle_status.h>
 #include <drivers/drv_hrt.h>
 

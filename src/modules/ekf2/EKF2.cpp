@@ -56,7 +56,7 @@ struct ParsedData{
    char* end_time;
    float long_lat_coords[20][10];
    int num_coords;
-   char certificate[2000];
+   char certificate[1100];
 };
 
 char* strip_1(char *str) {
@@ -101,14 +101,14 @@ ParsedData parse_artifact_1()
 
    ParsedData result{};
 
-   fp = fopen("permission_artifact_breach.xml", "r"); // read mode
+   fp = fopen("./log/permission_artifact_breach.xml", "r"); // read mode
 
 
 
    char certi_tagi[30]="<X509Certificate>";
    char certi_tage[30]="</X509Certificate>";
 
-   char buf[100000], start_time[200], end_time[200],long_lat_coords[20][20];
+   char buf[1000], start_time[200], end_time[200],long_lat_coords[20][20];
    rewind(fp);
    int c_flag_i=0,c_flag_e=0,line;
    line=0;
@@ -187,8 +187,8 @@ ParsedData parse_artifact_1()
 
 bool onSegment(PolyPoint p, PolyPoint q, PolyPoint r)
 {
-    if (q.x <= std::max(p.x, r.x) && q.x >= std::min(p.x, r.x) &&
-            q.y <= std::max(p.y, r.y) && q.y >= std::min(p.y, r.y))
+    if (q.x <= math::max(p.x, r.x) && q.x >= math::min(p.x, r.x) &&
+            q.y <= math::max(p.y, r.y) && q.y >= math::min(p.y, r.y))
         return true;
     return false;
 }

@@ -968,6 +968,6 @@ PARAM_DEFINE_FLOAT(COM_LKDOWN_TKO, 3.0f);
 */
 PARAM_DEFINE_INT32(COM_ARM_ARSP_EN, 1);
 
-PARAM_DEFINE_INT32(PERM_ARTIFACT,0);
+PARAM_DEFINE_INT32(PERM_ARTIFACT,0);//checks if permission artifact is present or not
 
-PARAM_DEFINE_INT32(IN_FENCE,0);
+PARAM_DEFINE_INT32(IN_FENCE,0);// checks if current position is inside the legal area

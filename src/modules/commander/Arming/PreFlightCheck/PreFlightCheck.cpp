@@ -42,20 +42,78 @@
 #include <lib/parameters/param.h>
 #include <systemlib/mavlink_log.h>
 #include <uORB/Subscription.hpp>
+#include <uORB/topics/vehicle_gps_position.h>
+#include<stdlib.h>
+#include<time.h>
+#include<stdio.h>
+#include<string.h>
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+struct Date_time{
+       int Hours;
+       int Minutes;
+       int Seconds;
+       int date;
+       int Month;
+       int Year;
+};
+struct GEO_DATE_TIME_XML{// for storing xml data
+    Date_time start;
+    Date_time end;
+};
 
 struct ParsedData{
    char* start_time;
    char* end_time;
    float long_lat_coords[20][10];
    int num_coords;
-   char certificate[2000];
+   char certificate[1100];
 };
 
+GEO_DATE_TIME_XML parseTOgdt(ParsedData D){
+	GEO_DATE_TIME_XML Rv;
+	char *p,*q;
+	p=D.start_time;
+	q=D.end_time;
+        char df[4];
+        memcpy(df,p,4);
+        Rv.start.Year=atoi(df);
+        char mf[2];
+        memcpy(mf,(p+5),2);
+	Rv.start.Month=atoi(mf)/10000;
+	memcpy(mf,(p+8),2);
+	Rv.start.date=atoi(mf)/10000;
+
+
+
+	memcpy(df,q,4);
+	Rv.end.Year=atoi(df);
+	memcpy(mf,(q+5),2);
+	Rv.end.Month=atoi(mf)/10000;
+	memcpy(mf,(q+8),2);
+	Rv.end.date=atoi(mf)/10000;
+
+
+
+
+
+	memcpy(mf,(p+11),2);
+	Rv.start.Hours=atoi(mf)/10000;
+	memcpy(mf,(p+14),2);
+	Rv.start.Minutes=atoi(mf)/10000;
+	memcpy(mf,(p+17),2);
+	Rv.start.Seconds=atoi(mf)/10000;
+
+
+	memcpy(mf,(q+11),2);
+	Rv.end.Hours=atoi(mf)/10000;
+	memcpy(mf,(q+14),2);
+	Rv.end.Minutes=atoi(mf)/10000;
+	memcpy(mf,(q+17),2);
+	Rv.end.Seconds=atoi(mf)/10000;
+
+        return Rv;
+}
 char* strip(char *str) {
     size_t len = strlen(str);
     memmove(str, str+1, len-2);
@@ -91,6 +149,59 @@ int isSubstring(char s1[50], char s2[100])///s1 is the sub string ; s2 is the la
     return -1;
 }
 
+bool In_Time(Date_time current, GEO_DATE_TIME_XML Xml){
+
+	// full check
+    printf("hello hello");
+	if(Xml.start.Year<=current.Year && current.Year<=Xml.end.Year){
+        printf("year is ok");
+		if(Xml.start.Month<=current.Month && current.Month<=Xml.end.Month){
+            printf("month is ok");
+                       if(Xml.start.date<=current.date && current.date<=Xml.end.date){
+                           printf("date is ok");
+
+		       }
+		       else{ printf("%d",current.Year);
+			       return 0;
+		       }
+		}else{
+			return 0;
+		}
+	}
+	else{
+        	return 0;
+	}
+	//time check
+	if(Xml.start.Hours<=current.Hours||current.Hours<=Xml.end.Hours){
+        printf("\nhours is ok");
+        if(Xml.start.Hours==current.Hours||current.Hours==Xml.end.Hours){
+            printf("both the hours are equal");
+            if(Xml.start.Hours==current.Hours){
+                printf("\nstart hours are equal");
+                if(Xml.start.Minutes<=current.Minutes){
+                    printf(" minutes are ok");
+                    if(Xml.start.Minutes==current.Minutes){
+                        printf("miutes are equal");
+                    if(Xml.start.Seconds<=current.Seconds){
+                        return 1;
+                    }else{return 0;}
+                }else{return 1;}
+                }else{return 0;}
+            }
+            else{
+                 if(Xml.end.Minutes>=current.Minutes){
+                    if(Xml.end.Minutes==current.Minutes){
+                    if(Xml.end.Seconds>current.Seconds){
+                        return 1;
+                    }else{return 0;}
+                }else{return 1;}
+                }else{return 0;}
+
+            }
+        }
+}else{return 0;}
+return 0;
+}
 
 ParsedData parse_artifact()
 {
@@ -98,14 +209,23 @@ ParsedData parse_artifact()
 
    ParsedData result{};
 
-   fp = fopen("permission_artifact_breach.xml", "r"); // read mode
+   fp = fopen("./log/permission_artifact_breach.xml", "r"); // read mode
 
-
+    char xml_filename[] = "./log/permission_artifact_breach.xml";
+    char txt_filename[] = "./log/test.txt";
+    char copy_command[256] = "cp ";
+    strcat(copy_command,xml_filename);
+    strcat(copy_command," ");
+    strcat(copy_command,txt_filename);
+    printf("\n");
+    printf("%s",copy_command);
+    int errorcode = system(copy_command);
+    printf(" error code %d ",errorcode);
 
    char certi_tagi[30]="<X509Certificate>";
    char certi_tage[30]="</X509Certificate>";
 
-   char buf[100000], start_time[200], end_time[200],long_lat_coords[20][20];
+   char buf[1000], start_time[200], end_time[200],long_lat_coords[20][20];
    rewind(fp);
    int c_flag_i=0,c_flag_e=0,line;
    line=0;
@@ -137,12 +257,13 @@ ParsedData parse_artifact()
          if(c_flag_i==1 && c_flag_e==0){
          if (aux==1){
          for(int u=index[0][1]+17;u<length(buf);u++){
-           printf("%c",buf[u]);
+        //   printf("%c",buf[u]);
+	     result.certificate[u]=buf[u];
          }
          aux=0;
          }
          else{
-            printf("%s\n",buf);
+           // printf("%s\n",buf);
          }
          }
     //     printf("%s\n",buf);
@@ -162,12 +283,7 @@ ParsedData parse_artifact()
             coord_ind++;
          }
 		}
-      for (int i=0;i<2;i++){
-         for(int j=0;j<2;j++){
-            printf("%d ",index[i][j]);
-         }
-         printf("\n");
-      }
+
       result.start_time = start_time;
       result.end_time = end_time;
       result.num_coords = static_cast<int>(coord_ind/2);
@@ -198,28 +314,89 @@ bool PreFlightCheck::preflightCheck(orb_advert_t *mavlink_log_pub, vehicle_statu
 	report_failures = (report_failures && status_flags.condition_system_hotplug_timeout
 			   && !status_flags.condition_calibration_enabled);
 
-	FILE * file;
-	file = fopen("permission_artifact_breach.xml", "r");
+        FILE * file;
+        int vehi_gps_pos=orb_subscribe(ORB_ID(vehicle_gps_position));
+        time_t timestamp;
+	struct vehicle_gps_position_s raw;
+	orb_copy(ORB_ID(vehicle_gps_position),vehi_gps_pos,&raw);
+	timestamp=(raw.time_utc_usec)/1000000;//microsecond to seconds
+	struct tm  ts;
+        Date_time DT;//current time
+        ts = *localtime(&timestamp);
+        DT.Year=ts.tm_year+1900;
+        DT.Month=ts.tm_mon+1;
+        DT.date=ts.tm_mday;
+        DT.Hours=ts.tm_hour;
+        DT.Minutes=ts.tm_min;
+        DT.Seconds=ts.tm_sec;
+	        printf("\n%d/%d/%d current %d:%d:%d \n",DT.Year,DT.Month,DT.date,DT.Hours,DT.Minutes,DT.Seconds);
+		//printf("\ntimestamp::::%lu\n",raw.time_utc_usec);
+
+
+	file = fopen("./log/permission_artifact_breach.xml", "r");// ./log/ for posix /log/ for nuttx
 	if (file){
 	//printf("file exists\n");
 	fclose(file);
+	GEO_DATE_TIME_XML Rv;
 	ParsedData data= parse_artifact();
+
+        char *p,*q;
+	p=data.start_time;
+	q=data.end_time;
+         char df[4];
+         memcpy(df,p,4);
+        printf("oye  %s",df);
+        Rv.start.Year=atoi(df);
+        char mf[2];
+        memcpy(mf,(p+5),2);
+	Rv.start.Month=atoi(mf)/10000;
+	memcpy(mf,(p+8),2);
+	Rv.start.date=atoi(mf)/10000;
+	memcpy(df,q,4);
+	Rv.end.Year=atoi(df);
+	memcpy(mf,(q+5),2);
+	Rv.end.Month=atoi(mf)/10000;
+	memcpy(mf,(q+8),2);
+	Rv.end.date=atoi(mf)/10000;
+	memcpy(mf,(p+11),2);
+	Rv.start.Hours=atoi(mf)/10000;
+	memcpy(mf,(p+14),2);
+	Rv.start.Minutes=atoi(mf)/10000;
+	memcpy(mf,(p+17),2);
+	Rv.start.Seconds=atoi(mf)/10000;
+	memcpy(mf,(q+11),2);
+	Rv.end.Hours=atoi(mf)/10000;
+	memcpy(mf,(q+14),2);
+	Rv.end.Minutes=atoi(mf)/10000;
+	memcpy(mf,(q+17),2);
+	Rv.end.Seconds=atoi(mf)/10000;
+
+        printf("\nfrom xml:: %d/%d/%d and  %d:%d:%d",Rv.end.Year,Rv.end.Month,Rv.end.date,Rv.end.Hours,Rv.end.Minutes,Rv.end.Seconds);
+
+
+	bool in_time=In_Time(DT,Rv);
+	if (in_time!=1){
+		printf("\n permission denied\n");
+		return false;
+	}
 	(void) data;
-	/*
+
+/*
 	Add code comparing data.start_time and data.end_time with current local time.
 	Return false if time requirement is not satisfied, otherwise continue with
 	other checks
 	Also add code to check if certificate is valid, otherwise return false
-	*/
+*/
 	int has_artifact = 1;
 	param_set(param_find("PERM_ARTIFACT"),&has_artifact);
+	printf("Permission Artifact Found \n");
 	}
 
 	else{
    	//file doesn't exists or cannot be opened (es. you don't have access permission)
 	int has_artifact = 0;
 	param_set(param_find("PERM_ARTIFACT"),&has_artifact);
-	printf("No Permission Artifact Found \n");
+	printf("No  \n");
 	return false;
 	}
 
@@ -227,6 +404,7 @@ bool PreFlightCheck::preflightCheck(orb_advert_t *mavlink_log_pub, vehicle_statu
 	param_get(param_find("IN_FENCE"),&in_fence);
 
 	if (!in_fence) return false;
+
 	bool failed = false;
 
 	failed = failed || !airframeCheck(mavlink_log_pub, status);

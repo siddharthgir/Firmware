@@ -192,7 +192,7 @@ private:
 	bool _mag_decl_saved = false;	///< true when the magnetic declination has been saved
 
 	bool _had_valid_terrain{false};			///< true if at any time there was a valid terrain estimate
-	PolyPoint geofence[20];
+	PolyPoint geofence[10];
 	int geofence_size;
 	uint64_t _gps_time_usec{0};
 	int32_t _gps_alttitude_ellipsoid{0};			///< altitude in 1E-3 meters (millimeters) above ellipsoid
